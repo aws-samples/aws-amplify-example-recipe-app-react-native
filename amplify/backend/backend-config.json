@@ -1,1 +1,10 @@
-{}
+{
+  "auth": {
+    "dlbamplify090a56cf": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  }
+}
