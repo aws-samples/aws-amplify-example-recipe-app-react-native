@@ -16,6 +16,7 @@ import {
   StatusBar,
   Text,
   View,
+  Image
 } from 'react-native';
 
 import Amplify from 'aws-amplify'
@@ -84,6 +85,9 @@ class App extends Component<any, GlobalAppState> {
 
       return (
         <LoginScreen
+          source={ require("../img/login-background.png") }
+          logoComponent={renderLogo()}
+          backgroundColor={"#F2A22B"}
           usernameOnChangeText={(username: string) =>
             this.username = username
           }
@@ -129,3 +133,37 @@ class App extends Component<any, GlobalAppState> {
 }
 
 export default App;
+
+
+const renderLogo = () => (
+  <View
+    style={{
+      bottom: 50,
+      alignItems: "center",
+      justifyContent: "center",
+    }}
+  >
+    <Image
+      resizeMode="contain"
+      source={require("../img/recipesandstuff_logo_transparent.png")}
+      style={{ height: 250, width: 250 }}
+    />
+    <Text
+      style={{
+        bottom: 32,
+        color: "#fdfdfd",
+        // fontFamily: "Now-Bold",
+        fontSize: 32,
+        shadowRadius: 3,
+        shadowOpacity: 0.7,
+        shadowColor: "#757575",
+        shadowOffset: {
+          width: 0,
+          height: 3,
+        },
+      }}
+    >
+      Welcome
+    </Text>
+  </View>
+);
