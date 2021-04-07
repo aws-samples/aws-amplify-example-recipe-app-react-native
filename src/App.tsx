@@ -8,7 +8,7 @@
  * @format
  */
 
-import React, { useState, Component } from 'react';
+import React, { Component } from 'react';
 import {
   Button,
   SafeAreaView,
@@ -19,7 +19,6 @@ import {
 } from 'react-native';
 
 import Amplify from 'aws-amplify'
-import { withAuthenticator } from 'aws-amplify-react-native'
 import { Hub, Auth } from 'aws-amplify';
 
 import config from './aws-exports'
