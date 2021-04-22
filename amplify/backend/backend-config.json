@@ -1,6 +1,6 @@
 {
   "auth": {
-    "dlbamplify090a56cf": {
+    "dlbamplify57cb552c": {
       "service": "Cognito",
       "providerPlugin": "awscloudformation",
       "dependsOn": [],
@@ -16,8 +16,8 @@
           "defaultAuthentication": {
             "authenticationType": "API_KEY",
             "apiKeyConfig": {
-              "apiKeyExpirationDays": 7,
-              "description": "recipes"
+              "apiKeyExpirationDays": 5,
+              "description": "authAPIKey"
             }
           },
           "additionalAuthenticationProviders": []
