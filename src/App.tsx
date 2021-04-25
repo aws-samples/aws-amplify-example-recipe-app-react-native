@@ -1,7 +1,5 @@
 /**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
+ * Recipes and Stuff React App
  * Generated with the TypeScript template
  * https://github.com/react-native-community/react-native-template-typescript
  *
@@ -24,13 +22,16 @@ import {
 
 import Amplify from 'aws-amplify'
 import { Hub, Auth, API, graphqlOperation } from 'aws-amplify';
+import uuid from 'react-native-uuid';
 import { createRecipe } from './graphql/mutations'
-import { listRecipes } from './graphql/queries'
+import { getRecipe, listRecipes } from './graphql/queries'
 
 import config from './aws-exports'
 Amplify.configure(config)
 
 import LoginScreen from "react-native-login-screen";
+import { launchImageLibrary } from 'react-native-image-picker';
+import { Storage } from 'aws-amplify';
 
 interface Recipe {
   id?: number
@@ -38,6 +39,7 @@ interface Recipe {
   servings: string
   ingredients: string
   instructions: string
+  image: string
 }
 
 interface GlobalAppState {
@@ -47,15 +49,18 @@ interface GlobalAppState {
   showForm: boolean
   message?: string
   recipesChanged: boolean
+  photoURI: string
 }
 
-const INITIAL_STATE: GlobalAppState = { user: undefined, recipes: [], showForm: false, message: undefined, recipesChanged: false,
-  formState: { id: undefined, title: '', servings: '', ingredients: '', instructions: ''} };
+const INITIAL_STATE: GlobalAppState = {
+  user: undefined, recipes: [], showForm: false, message: undefined, recipesChanged: false,
+  formState: { id: undefined, title: '', servings: '', ingredients: '', instructions: '', image: '' }, photoURI: ''
+};
 
 class App extends Component<any, GlobalAppState> {
 
-  private username : string = "";
-  private password : string = "";
+  private username: string = "";
+  private password: string = "";
 
   constructor(props: any) {
     super(props);
@@ -106,10 +111,18 @@ class App extends Component<any, GlobalAppState> {
     this.setState({ formState: { ...this.state.formState, [key]: value } });
   }
 
-  createRecipe = async() => {
+  createRecipe = async () => {
     try {
+      // grab the image from the phone and upload to S3
+      const response = await fetch(this.state.photoURI);
+      const blob = await response.blob();
+      await Storage.put(this.state.formState.image, blob, {
+        contentType: 'image/jpg',
+        level: 'private'
+      })
+      //persist the recipe data
       const recipe = { ...this.state.formState }
-      await API.graphql(graphqlOperation(createRecipe, {input: recipe}));
+      await API.graphql(graphqlOperation(createRecipe, { input: recipe }));
       this.setState({ recipes: [...this.state.recipes, recipe], formState: INITIAL_STATE.formState, showForm: false, recipesChanged: true, message: 'Recipe created successfully!' });
     } catch (err) {
       console.error('error creating recipe:', err)
@@ -119,10 +132,38 @@ class App extends Component<any, GlobalAppState> {
 
   async fetchRecipes() {
     try {
-      const recipeData : any = await API.graphql(graphqlOperation(listRecipes))
-      const recipes = recipeData.data.listRecipes.items
-      this.setState({ recipes: recipes});
+      //fetch the recipes from the server
+      const recipeData: any = await API.graphql(graphqlOperation(listRecipes))
+      let recipes = recipeData.data.listRecipes.items
+      //lazy download all the images - note: security is set to private
+      Storage.configure({ level: 'private' });
+      recipes = await Promise.all(recipes.map(async (recipe: any) => {
+        const imageKey = await Storage.get(recipe.image);
+        recipe.image = imageKey;
+        return recipe;
+      }));
+      this.setState({ recipes: recipes });
     } catch (err) { console.log('error fetching recipes') }
+  }
+
+  handleChoosePhoto = async () => {
+    try {
+      launchImageLibrary({
+        mediaType: 'photo',
+        includeBase64: false,
+        maxHeight: 200,
+        maxWidth: 200,
+      }, (response) => {
+        if (response.uri) {
+          console.log(response.uri);
+          this.setState({ photoURI: response.uri });
+          const fileName = uuid.v4() + '_recipePhoto.jpg';
+          this.setInput('image', fileName);
+        }
+      })
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   render() {
@@ -135,7 +176,7 @@ class App extends Component<any, GlobalAppState> {
 
       return (
         <LoginScreen
-          source={ require("../img/login-background.png") }
+          source={require("../img/login-background.png")}
           logoComponent={renderLogo()}
           backgroundColor={"#F2A22B"}
           usernameOnChangeText={(username: string) =>
@@ -160,7 +201,7 @@ class App extends Component<any, GlobalAppState> {
 
       return (
         <SafeAreaView>
-          <StatusBar/>
+          <StatusBar />
           <ScrollView
             contentInsetAdjustmentBehavior="automatic" >
             <View>
@@ -173,14 +214,14 @@ class App extends Component<any, GlobalAppState> {
                   style={{ height: 100, width: 250 }}
                 />
                 <Button
-                    title="Signout"
-                    onPress={async () => {
-                      console.debug("Sign out")
-                      await Auth.signOut();
-                      this.setState({ user: undefined });
-                    }} color='#ffffff' ></Button>
+                  title="Signout"
+                  onPress={async () => {
+                    console.debug("Sign out")
+                    await Auth.signOut();
+                    this.setState({ user: undefined });
+                  }} color='#ffffff' ></Button>
               </View>
-              { state.showForm &&
+              {state.showForm &&
                 <View style={styles.container}>
                   <Text style={styles.title}>New Recipe</Text>
                   <TextInput
@@ -191,7 +232,7 @@ class App extends Component<any, GlobalAppState> {
                   />
                   <TextInput
                     onChangeText={val => this.setInput('servings', val)}
-                    keyboardType = 'number-pad'
+                    keyboardType='number-pad'
                     style={[styles.input, styles.textInput]}
                     value={this.state.formState.servings}
                     placeholder="Servings"
@@ -212,15 +253,32 @@ class App extends Component<any, GlobalAppState> {
                     numberOfLines={20}
                     placeholder="Instructions"
                   />
+
+
+
+                  {this.state.photoURI == '' &&
+                    <TouchableOpacity style={styles.button} onPress={this.handleChoosePhoto} >
+                      <Text style={styles.buttonText}>Add Photo</Text>
+                    </TouchableOpacity>
+                  }
+
+                  {this.state.photoURI != '' &&
+                    <View style={styles.imageContainer}>
+                      <TouchableOpacity style={styles.image} onPress={this.handleChoosePhoto} >
+                        <Image source={{ uri: this.state.photoURI }} style={styles.image} />
+                      </TouchableOpacity>
+                    </View>
+                  }
+
                   <TouchableOpacity style={styles.button} onPress={this.createRecipe} >
                     <Text style={styles.buttonText}>Save</Text>
                   </TouchableOpacity>
                   <Button title="Cancel" onPress={async () => {
-                          this.setState({ showForm: false });
-                        }} color='#333' />
+                    this.setState({ showForm: false });
+                  }} color='#333' />
                 </View>
               }
-              { !state.showForm &&
+              {!state.showForm &&
                 <View style={styles.container}>
                   <TouchableOpacity style={[styles.button, { marginTop: -25 }]} onPress={async () => {
                     this.setState({ showForm: true, message: undefined });
@@ -246,6 +304,7 @@ class App extends Component<any, GlobalAppState> {
                         <Text style={styles.recipeText}>{recipe.ingredients}</Text>
                         <Text style={styles.recipeLabel}>Instructions</Text>
                         <Text style={styles.recipeText}>{recipe.instructions}</Text>
+                        <Image source={{ uri: recipe.image }} style={styles.image} />
                       </View>
                     ))
                   }
@@ -269,18 +328,20 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10
   },
-  buttonText: { fontSize: 18, color: '#ffffff'},
+  buttonText: { fontSize: 18, color: '#ffffff' },
   headerLogo: { bottom: 50, alignItems: "center", justifyContent: "center", backgroundColor: '#F2A22B', paddingTop: 45 },
   container: { flex: 1, justifyContent: 'center', paddingHorizontal: 20, color: '#333' },
-  recipe: {  marginBottom: 15, padding: 10, borderColor: '#F2A22B', borderStyle: 'solid', borderWidth: 1 },
+  recipe: { marginBottom: 15, padding: 10, borderColor: '#F2A22B', borderStyle: 'solid', borderWidth: 1 },
   textInput: { height: 50 },
   multilineInput: { height: 200, textAlignVertical: 'top', },
   input: { backgroundColor: '#efefef', marginBottom: 10, padding: 8 },
   title: { fontSize: 20, fontWeight: 'bold', marginBottom: 15, color: '#F2A22B' },
   recipeTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 15, color: '#F2A22B' },
   recipeLabel: { fontSize: 14, fontWeight: 'bold', marginBottom: 5, color: '#333' },
-  recipeText: { color: '#333'},
-  message: { fontWeight: 'bold', color: 'red', marginBottom: 15 }
+  recipeText: { color: '#333' },
+  message: { fontWeight: 'bold', color: 'red', marginBottom: 15 },
+  image: { width: 200, height: 200 },
+  imageContainer: { alignItems: 'center', justifyContent: 'center', marginBottom: 10, flex: 1 }
 });
 
 const renderLogo = () => (
@@ -315,3 +376,5 @@ const renderLogo = () => (
     </Text>
   </View>
 );
+
+

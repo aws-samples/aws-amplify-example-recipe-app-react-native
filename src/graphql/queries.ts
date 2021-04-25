@@ -10,6 +10,7 @@ export const getRecipe = /* GraphQL */ `
       servings
       ingredients
       instructions
+      image
       createdAt
       updatedAt
     }
@@ -28,6 +29,7 @@ export const listRecipes = /* GraphQL */ `
         servings
         ingredients
         instructions
+        image
         createdAt
         updatedAt
       }

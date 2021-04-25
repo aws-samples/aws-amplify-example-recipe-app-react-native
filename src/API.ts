@@ -8,6 +8,7 @@ export type CreateRecipeInput = {
   servings: number,
   ingredients: string,
   instructions: string,
+  image?: string | null,
 };
 
 export type ModelRecipeConditionInput = {
@@ -15,6 +16,7 @@ export type ModelRecipeConditionInput = {
   servings?: ModelIntInput | null,
   ingredients?: ModelStringInput | null,
   instructions?: ModelStringInput | null,
+  image?: ModelStringInput | null,
   and?: Array< ModelRecipeConditionInput | null > | null,
   or?: Array< ModelRecipeConditionInput | null > | null,
   not?: ModelRecipeConditionInput | null,
@@ -79,6 +81,7 @@ export type Recipe = {
   servings?: number,
   ingredients?: string,
   instructions?: string,
+  image?: string | null,
   createdAt?: string,
   updatedAt?: string,
 };
@@ -89,6 +92,7 @@ export type UpdateRecipeInput = {
   servings?: number | null,
   ingredients?: string | null,
   instructions?: string | null,
+  image?: string | null,
 };
 
 export type DeleteRecipeInput = {
@@ -101,6 +105,7 @@ export type ModelRecipeFilterInput = {
   servings?: ModelIntInput | null,
   ingredients?: ModelStringInput | null,
   instructions?: ModelStringInput | null,
+  image?: ModelStringInput | null,
   and?: Array< ModelRecipeFilterInput | null > | null,
   or?: Array< ModelRecipeFilterInput | null > | null,
   not?: ModelRecipeFilterInput | null,
@@ -141,6 +146,7 @@ export type CreateRecipeMutation = {
     servings: number,
     ingredients: string,
     instructions: string,
+    image?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -159,6 +165,7 @@ export type UpdateRecipeMutation = {
     servings: number,
     ingredients: string,
     instructions: string,
+    image?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -177,6 +184,7 @@ export type DeleteRecipeMutation = {
     servings: number,
     ingredients: string,
     instructions: string,
+    image?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -194,6 +202,7 @@ export type GetRecipeQuery = {
     servings: number,
     ingredients: string,
     instructions: string,
+    image?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -215,6 +224,7 @@ export type ListRecipesQuery = {
       servings: number,
       ingredients: string,
       instructions: string,
+      image?: string | null,
       createdAt: string,
       updatedAt: string,
     } | null > | null,
@@ -230,6 +240,7 @@ export type OnCreateRecipeSubscription = {
     servings: number,
     ingredients: string,
     instructions: string,
+    image?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -243,6 +254,7 @@ export type OnUpdateRecipeSubscription = {
     servings: number,
     ingredients: string,
     instructions: string,
+    image?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -256,6 +268,7 @@ export type OnDeleteRecipeSubscription = {
     servings: number,
     ingredients: string,
     instructions: string,
+    image?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,

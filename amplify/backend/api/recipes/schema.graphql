@@ -4,4 +4,5 @@ type Recipe @model {
   servings: Int!
   ingredients: String!
   instructions: String!
+  image: String
 }
