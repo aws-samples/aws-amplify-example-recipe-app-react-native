@@ -21,17 +21,15 @@ import {
 } from 'react-native';
 
 import Amplify from 'aws-amplify'
-import { Hub, Auth, API, graphqlOperation } from 'aws-amplify';
-import uuid from 'react-native-uuid';
+import { Hub, Auth, API, graphqlOperation, Storage } from 'aws-amplify';
 import { createRecipe } from './graphql/mutations'
 import { getRecipe, listRecipes } from './graphql/queries'
-
+import {launchImageLibrary} from 'react-native-image-picker'
+import uuid from 'react-native-uuid';
 import config from './aws-exports'
 Amplify.configure(config)
 
 import LoginScreen from "react-native-login-screen";
-import { launchImageLibrary } from 'react-native-image-picker';
-import { Storage } from 'aws-amplify';
 
 interface Recipe {
   id?: number
@@ -54,7 +52,7 @@ interface GlobalAppState {
 
 const INITIAL_STATE: GlobalAppState = {
   user: undefined, recipes: [], showForm: false, message: undefined, recipesChanged: false,
-  formState: { id: undefined, title: '', servings: '', ingredients: '', instructions: '', image: '' }, photoURI: ''
+  formState: { id: undefined, title: '', servings: '', ingredients: '', instructions: '', image:''  } , photoURI: ''
 };
 
 class App extends Component<any, GlobalAppState> {
@@ -113,12 +111,11 @@ class App extends Component<any, GlobalAppState> {
 
   createRecipe = async () => {
     try {
-      // grab the image from the phone and upload to S3
-      const response = await fetch(this.state.photoURI);
-      const blob = await response.blob();
-      await Storage.put(this.state.formState.image, blob, {
-        contentType: 'image/jpg',
-        level: 'private'
+      const photo = await fetch(this.state.photoURI)
+      const photoBlob = await photo.blob();
+      await Storage.put(this.state.formState.image, photoBlob, {
+        level: 'private',
+        contentType: 'image/jpg'
       })
       //persist the recipe data
       const recipe = { ...this.state.formState }
@@ -132,13 +129,13 @@ class App extends Component<any, GlobalAppState> {
 
   async fetchRecipes() {
     try {
+      Storage.configure({level:'private'})
+     
       //fetch the recipes from the server
       const recipeData: any = await API.graphql(graphqlOperation(listRecipes))
       let recipes = recipeData.data.listRecipes.items
-      //lazy download all the images - note: security is set to private
-      Storage.configure({ level: 'private' });
-      recipes = await Promise.all(recipes.map(async (recipe: any) => {
-        const imageKey = await Storage.get(recipe.image);
+      recipes = await Promise.all(recipes.map(async (recipe:any) =>{
+        const imageKey = await Storage.get(recipe.image)
         recipe.image = imageKey;
         return recipe;
       }));
@@ -151,21 +148,20 @@ class App extends Component<any, GlobalAppState> {
       launchImageLibrary({
         mediaType: 'photo',
         includeBase64: false,
-        maxHeight: 200,
-        maxWidth: 200,
-      }, (response) => {
-        if (response.uri) {
-          console.log(response.uri);
-          this.setState({ photoURI: response.uri });
-          const fileName = uuid.v4() + '_recipePhoto.jpg';
-          this.setInput('image', fileName);
+        maxHeight:200,
+        maxWidth:200,
+      }, (response ) => {
+        if(response.uri){
+          this.setState({ photoURI: response.uri})
+          const filename = uuid.v4() + '_recipePhoto.jpg'
+          this.setInput('image', filename )
         }
       })
     } catch (error) {
-      console.log(error)
+      
     }
   }
-
+ 
   render() {
     const state = this.state as GlobalAppState;
     console.debug(state)
@@ -254,21 +250,19 @@ class App extends Component<any, GlobalAppState> {
                     placeholder="Instructions"
                   />
 
-
-
-                  {this.state.photoURI == '' &&
-                    <TouchableOpacity style={styles.button} onPress={this.handleChoosePhoto} >
-                      <Text style={styles.buttonText}>Add Photo</Text>
+                {this.state.photoURI == '' && 
+                <TouchableOpacity style={styles.button} onPress={this.handleChoosePhoto}>
+                  <Text style={styles.buttonText}>Add Photo</Text>
                     </TouchableOpacity>
-                  }
+                }
 
-                  {this.state.photoURI != '' &&
-                    <View style={styles.imageContainer}>
-                      <TouchableOpacity style={styles.image} onPress={this.handleChoosePhoto} >
-                        <Image source={{ uri: this.state.photoURI }} style={styles.image} />
-                      </TouchableOpacity>
-                    </View>
-                  }
+                {this.state.photoURI != '' &&
+                <View style={styles.imageContainer}>
+                  <Image source={{uri:this.state.photoURI}} style={styles.image}/>
+                 </View> 
+                }
+
+                 
 
                   <TouchableOpacity style={styles.button} onPress={this.createRecipe} >
                     <Text style={styles.buttonText}>Save</Text>
@@ -304,7 +298,7 @@ class App extends Component<any, GlobalAppState> {
                         <Text style={styles.recipeText}>{recipe.ingredients}</Text>
                         <Text style={styles.recipeLabel}>Instructions</Text>
                         <Text style={styles.recipeText}>{recipe.instructions}</Text>
-                        <Image source={{ uri: recipe.image }} style={styles.image} />
+                        <Image source={{uri: recipe.image}} style={styles.image}/>
                       </View>
                     ))
                   }

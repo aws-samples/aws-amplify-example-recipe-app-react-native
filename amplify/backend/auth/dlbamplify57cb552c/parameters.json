@@ -1,6 +1,6 @@
 {
     "identityPoolName": "dlbamplify57cb552c_identitypool_57cb552c",
-    "allowUnauthenticatedIdentities": false,
+    "allowUnauthenticatedIdentities": true,
     "resourceNameTruncated": "dlbamp57cb552c",
     "userPoolName": "dlbamplify57cb552c_userpool_57cb552c",
     "autoVerifiedAttributes": [

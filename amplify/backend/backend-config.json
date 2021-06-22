@@ -14,10 +14,9 @@
       "output": {
         "authConfig": {
           "defaultAuthentication": {
-            "authenticationType": "API_KEY",
-            "apiKeyConfig": {
-              "apiKeyExpirationDays": 5,
-              "description": "authAPIKey"
+            "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+            "userPoolConfig": {
+              "userPoolId": "authdlbamplify57cb552c"
             }
           },
           "additionalAuthenticationProviders": []
@@ -26,7 +25,7 @@
     }
   },
   "storage": {
-    "recipeimages": {
+    "recipephotos": {
       "service": "S3",
       "providerPlugin": "awscloudformation"
     }
