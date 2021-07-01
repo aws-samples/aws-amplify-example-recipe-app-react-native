@@ -1,6 +1,4 @@
-## Developers Lets Build Sample react-native mobile app
-
-# Sample Mobile Application from AWS Developers Let's Build session
+## Sample Mobile Application from AWS Developers Let's Build session
 
 ## Things to note about this repository
 
