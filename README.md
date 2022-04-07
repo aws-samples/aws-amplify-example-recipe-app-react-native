@@ -4,8 +4,7 @@
 
 The repo is divided into a number of different branches, each branch is an episode of the Developers Let's Build series on Building a Mobile Application.
 
-You can view the full series at https://summit-emea.virtual.awsevents.com/track_builders_zone_en/210384263/Let%27s+Build+Series  
-Note: This series was part of EMEA AWS Summit 2021 - so to view you will need to register. 
+You can view the full series at https://aws.amazon.com/developer/learning/lets-build-mobile/
 
 Branch Structure:
 
